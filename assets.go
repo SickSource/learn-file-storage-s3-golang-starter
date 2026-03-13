@@ -1,7 +1,12 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 func (cfg apiConfig) ensureAssetsDir() error {
@@ -9,4 +14,27 @@ func (cfg apiConfig) ensureAssetsDir() error {
 		return os.Mkdir(cfg.assetsRoot, 0755)
 	}
 	return nil
+}
+
+func getAssetPath(mediaType string) string {
+	randBytes := make([]byte, 32)
+	rand.Read(randBytes)
+	enc := base64.RawURLEncoding.EncodeToString(randBytes)
+	return enc + mediaTypeToExt(mediaType)
+}
+
+func (cfg apiConfig) getAssetDiskPath(assetPath string) string {
+	return filepath.Join(cfg.assetsRoot, assetPath)
+}
+
+func (cfg apiConfig) getAssetURL(assetPath string) string {
+	return fmt.Sprintf("http://localhost:%s/assets/%s", cfg.port, assetPath)
+}
+
+func mediaTypeToExt(mediaType string) string {
+	parts := strings.Split(mediaType, "/")
+	if len(parts) != 2 {
+		return ".bin"
+	}
+	return "." + parts[1]
 }
